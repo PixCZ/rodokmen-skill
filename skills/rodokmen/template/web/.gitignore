@@ -7,7 +7,9 @@ src/data/site.json
 src/generated/
 public/img/
 public/zdroje/
-.ramecky.json
 public/prihlaseni.html
 nginx.conf
 netlify/edge-functions/
+cloudflare/worker.js
+wrangler.jsonc
+.wrangler

@@ -2,7 +2,6 @@
 import Base from '../layouts/Base.astro';
 import { stats, lines, href, config, linesTitle } from '../lib/data.js';
 import fan from '../generated/fan.svg?raw';
-import MobileTree from '../components/MobileTree.astro';
 import FamilyMap from '../components/FamilyMap.astro';
 import site from '../data/site.json';
 import { frontmatter as pribeh } from '../generated/pribeh.md';
@@ -13,7 +12,7 @@ const cards = config.zajimavosti_na_uvodu ?? [];
 <Base title="" wide>
   <h1>{config.nazev || 'Rodokmen'}</h1>
 
-  {(uvod.nadpis || uvod.odstavce?.length) && (
+  {!!(uvod.nadpis || uvod.odstavce?.length) && (
     <section class="teaser">
       <div>
         {uvod.nadpis && <h2>{uvod.nadpis}</h2>}
@@ -78,10 +77,7 @@ const cards = config.zajimavosti_na_uvodu ?? [];
   )}
 
   <h2>Rodokmen</h2>
-  <div class="only-mobile">
-    <MobileTree k={1} />
-  </div>
-  <div class="fan-preview only-desktop"><a class="cover" href="/vejir/" aria-label="Otevřít vějíř předků přes celou obrazovku"></a><Fragment set:html={fan} /></div>
+  <div class="fan-preview"><a class="cover" href="/vejir/" aria-label="Otevřít vějíř předků přes celou obrazovku"></a><Fragment set:html={fan} /></div>
   <p style="display:flex;flex-wrap:wrap;gap:0.75rem;margin-top:1rem;">
     <a class="btn" href="/rodokmen/">Klasický rodokmen (strom) →</a>
     <a class="btn" href="/vejir/">Kruhový vějíř →</a>

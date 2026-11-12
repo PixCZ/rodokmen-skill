@@ -6,46 +6,231 @@ dá v repozitáři **Watch → Custom → Releases**.
 
 Projekt založený starší verzí Claude sám nabídne aktualizovat (pozná to podle souboru `VERZE`).
 
-## 0.7.1 – 5. 11. 2026
+## 0.10.0 – 10. 11. 2026
 
-Menší spotřeba tokenů, čistší texty pro rodinu a ověřený stav nástrojů z praxe.
+Hlavní novinka: **přepracované návody.** SKILL.md, který Claude čte v každém sezení, je o třetinu kratší – podrobnosti
+k instalaci a importu stromu jsou v samostatných návodech, které čte, až je potřebuje. Anglickou metodickou příručku
+nahradila česká `metodika.md`: spojování záznamů, ztotožnění osob, co dělat, když se hledání zasekne, a prameny
+na Slovensku, v Rakousku, Polsku, Německu a Maďarsku. Pravidla, na kterých stojí kvalita, zůstala beze změny.
 
 **Nové**
-- `tools/osoba.py`: výpis osoby, zápisu nebo otázky bez čtení velkých datových souborů.
-- `tools/zapis_davka.py`: celá dávka zápisů jedním voláním (výřez, rámeček, přepis, záznam, svazek).
-- Pravidlo „jeden úkol = jedna konverzace“ a strop asi 12 snímků a 30 kroků na pomocníka.
-- Hlavní konverzace snímky neotvírá: čtou je pomocníci na silném modelu, nález ověří naslepo druhý.
-- Postup pro začátek projektu a pozemkové knihy je v `reference/zacatek.md` a `reference/pozemkove_knihy.md`, `SKILL.md` je kratší.
+- Dva rodokmeny na jednom účtu Cloudflare: název webu jde nastavit v `web.json` (`cloudflare.web`, výchozí zůstává
+  „rodokmen“). Nasazení nově nepřepíše web jiného projektu – když na účtu web stejného jména už je, zastaví se a poradí.
+- Úvodní stránka webu na mobilu ukazuje jen vějíř (dřív vějíř i rodokmen pod sebou).
+- Vějíř: přibližování kolečkem je úměrné posunu, takže na touchpadu notebooku už neskáče (#165).
+- `zapis.py odkaz` přidá k osobě v `osoby.py` odkaz na zápis bez rizika rozbitých uvozovek.
+- Staré mapy z archivu ČÚZK: návod na ostrý výřez vsi z indikační skici ve vysokém rozlišení.
 
 **Opravy**
-- GEDCOM: životopis jen z příběhu, místo bez zdrojů, věku a poznámek.
-- Web: vyvrácená data nejsou životní údaje, druhé narození nebo úmrtí se ukáže jako „jiný údaj“.
-- Rodinné a internetové zdroje se pojmenovávají podle autora.
-- Z ukázek v nástrojích a návodech zmizely skutečné osobní údaje.
+- Windows: zápis dat přes vstup (`zapis.py … -`) už tiše nerozbíjí češtinu; nasazení na Cloudflare funguje i ze složky
+  s mezerou v cestě a kontrola soukromí webu na Netlify konečně proběhne. Prosím o zpětnou vazbu, na Windows jsem to
+  zkoušel jen nepřímo.
+- Brzda proti zablokování archivem chytí i adresu bez `https://`, víc adres nebo rozsah `[1-200]` v jednom `curl`
+  a vlastní výpis stavového kódu – dřív tudy mohly odejít dávky dotazů a odmítnutí archivu nezastavilo další.
+- ZA Opava: snímky se stahují pomaleji a při odmítnutí se nástroj zastaví místo opakování – po několika snímcích
+  rychle za sebou archiv blokoval.
+- Hlídač sítě nezamítá nevinné příkazy (text v uvozovkách v commitu nebo poznámce, `grep` vedle Pythonu).
+- Export webu nespadne na zástupné osobě bez jména, na opakovaném předkovi odkazujícím na neznámou osobu, na dokumentu
+  bez popisu ani na číselné odpovědi na přihlašovací otázku; dva rody stejného jména se na webu objeví oba.
+- Import rodinného stromu (GEDCOM) zvládne soubory v UTF-16 a sdílené poznámky a nezasekne se na chybě ve stromu.
+- `mista.py pridej` s novým dotazem obec znovu vyhledá – oprava stejnojmenné obce na mapě (#167).
+- Matricula: prošlý odkaz už neuloží chybovou stránku jako snímek.
+- Soubory dat s neviditelnou značkou BOM z Windows (Poznámkový blok, PowerShell) už nástroje neshodí.
+- Nástroje na `--help` a bez argumentů vypíšou nápovědu místo pádu (#157).
 
-**Změny chování**
-- Stav skillu odpovídá ověřenému nasazení: `novy_projekt.py` už nenabízí hlídač sítě a nezakazuje `curl`/`wget`,
-  brzdu `tools/slusne.py` nevolají `anno.py`, `anno_snap.py`, `aron_search.py`, `kramerius.py`, `mista.py`,
-  `ahmp_search.sh` a `matricula_dl.sh`. U archivů proto hlídej tempo stahování.
+**Návody**
+- Matriční úřad: zápis starší 100 / 75 / 30 let vydá komukoli i ze svazku, který je ještě na úřadě; mladší jen rodina
+  (§ 25b zákona o matrikách). Na Slovensku platí jiná pravidla (#150).
+- Pozemkové knihy jsou online i u SOA Třeboň a ZA Opava; doplněný slovníček latinských a německých výrazů.
+- Starší projekt se zapnutým hlídačem sítě se o nové verzi dozví i tehdy, když hlídač kontrolu zamítne.
+
+Děkuji všem za podrobné poznámky z praxe a za hotové návrhy oprav.
+
+## 0.9.2 – 7. 11. 2026
+
+**Opravy**
+- Kontrola nové verze z 0.9.1 u některých lidí neproběhla: hlídač sítě ji zablokoval (teď pustí skript, který se ptá
+  jen GitHubu) a kopie nástroje v projektu nenašla nainstalovaný skill (teď ho najde, a když ne, netvrdí „aktuální“).
+  U ručně nakopírovaného skillu radí stáhnout novou verzi z GitHubu místo příkazů pro plugin (#136).
+- Windows: hlídač sítě se po aktualizaci projektu nemusel spustit – v nastavení byl jen příkaz `python`, který
+  v prostředí Claude Code může vést na nefunkční zástupce z Microsoft Store. Teď je tam vždy plná cesta k Pythonu.
+- `npm install` ve `web/` už nehlásí závažnou zranitelnost (knihovna `undici`, používá ji jen sestavení webu).
+
+**Návody**
+- MZA Brno: snímky přes Playwright, ne vestavěný prohlížeč Claude desktop (dostává 403 i po pauze). Bílý snímek
+  s chybou 403 je blokace, ne pomalé načítání – Claude přestane a řekne to (#147).
+
+Děkuji všem za rychlá hlášení e-mailem i na GitHubu.
+
+## 0.9.1 – 6. 11. 2026
+
+**Nové**
+- Kontrola nové verze i proti GitHubu: Claude na začátku konverzace zjistí, jestli nevyšla novější verze, než je
+  nainstalovaná (nejvýš jednou denně), a poradí, jak skill aktualizovat. Dřív to poznal, jen když se kopie skillu
+  aktualizovala sama, a to se u některých instalací děje se zpožděním hodin až dnů (#98).
+
+**Opravy**
+- Aktualizace projektu odmítne starší kopii skillu, než ze které projekt vznikl – projekt se tak nevrátí ke staré verzi.
+
+## 0.9.0 – 6. 11. 2026
+
+Hlavní novinka: **rodinný web se nově zveřejňuje na Cloudflare.** Nasazování i přenos jsou zdarma bez limitu,
+takže web jde aktualizovat kdykoli (bezplatný Netlify vystačí jen na zhruba 20 nasazení měsíčně).
+
+**Nové**
+- **Zveřejnění na Cloudflare (výchozí).** Uživatel si jen založí účet a v prohlížeči klikne na „Allow“, zbytek
+  udělá Claude: navrhne adresu podle rodu (`https://rodokmen.novakovi.workers.dev`), předem ověří, že je volná,
+  a web nasadí příkazem `npm run nasadit-cloudflare`. Rodinná otázka chrání stránky i fotky, kontrola po nasazení
+  počká, až se nová adresa rozšíří, a ověří, že web bez přihlášení ukáže otázku (#50, #67).
+- Kdo má web na Netlify, nic měnit nemusí – `npm run nasadit` funguje dál. Claude teď ale po zveřejnění nenasazuje
+  po každém kole, jen na pokyn nebo jednou na konci sezení, a hlášku „Forbidden“ vysvětlí jako vyčerpané kredity (#54).
+
+**Opravy**
+- Vlastní server (Docker, CapRover): nginx kvůli přihlašovací otázce vůbec nenastartoval (chyba 502), u otevřeného
+  webu padal na dvojí `default`. Image je nově `nginx:stable-alpine` (#56, #61).
+- Odpověď na přihlašovací otázku jen z azbuky nebo symbolů: nasazení teď řekne proč, místo „není odpověď“.
+- Hlavička `SKILL.md` je platný YAML – hlásil ji jako chybnou GitHub i GitHub Copilot (#131).
+- Indikační skici stabilního katastru: v budově je červeně číslo popisné a černě číslo stavební parcely, ne
+  naopak (#132).
+
+**Návody**
+- Vlastní server: úklid starého image po přestavbě, příprava webu bez Node.js, přihlášení jen přes https,
+  za reverse proxy subdoména místo podadresáře.
+
+Děkuji všem, kdo poslali poznámky a opravy – hlavně za zkušenosti s Cloudflare a Dockerem.
+
+## 0.8.2 – 5. 11. 2026
+
+**Opravy**
+- SOA Plzeň (Porta fontium): nástroje se ptají nejvýš jednou za 10 sekund, jak archiv žádá ve svém robots.txt.
+  Stahování je pomalejší, hlavně mapa knihy (#129).
+
+## 0.8.1 – 5. 11. 2026
+
+V dnešním vydání jsem se zaměřil na nejčastěji hlášené problémy a vylepšení.
+
+**Nové**
+- Porta fontium: `portafontium.py obec "<obec>"` vypíše všechny knihy obce seskupené podle fary a seřazené podle let.
+  Je z toho vidět i přechod obce mezi farami a stejnojmenné obce jiných far.
+- FamilySearch: snímek z přihlášeného prohlížeče (Playwright) jde uložit do mezipaměti a do projektu v plném
+  rozlišení (`cache.py uloz`) a dál normálně vyříznout. Nový postup pro **Slovensko**: najít faru v katalogu,
+  zjistit, do kdy jsou knihy natočené (často jen do 1895), a jak pracovat s neúplným indexem.
+- Vybledlé snímky: `vyrez.py` a `overit.py` mají přepínač `--kontrast`. Bledá stránka se už nemá prohlásit za prázdnou.
+- Vojáci 1. světové války: `anno.py --ztraty` hledá jen v rakouských seznamech ztrát (pluk, domovská obec, ročník,
+  raněn/zajat/padl).
+- Netlify: po `npm run nasadit` se web sám otevře bez přihlášení a pozná, jestli ho místo rodinné otázky chrání
+  přihlášení k Netlify (ochrana týmu u nových webů). Vypíše, jak ji vypnout. Ručně `npm run overit`.
+
+**Opravy**
+- Brzda se zastaví i tehdy, když archiv přijme spojení, ale neodpovídá (noční výpadky). Dřív každé volání čekalo
+  přes dvě minuty.
+- `anno.py`: filtr podle listu (`ANNO_TITLE`) vracel vždy 0 výsledků.
+
+**Návody**
+- ZA Opava: detail svazku neotvírat přímou adresou (ukáže jiný svazek), raději trvalým odkazem `permalink?xid`.
+  Vestavěný prohlížeč aplikace Claude archiv odmítne, okno aspoň 1400×900, CAPTCHA řeší uživatel.
+- SOA Litoměřice: hledání přes pole Místo, vyzkoušený úryvek pro adresy snímků, jak poznat blokaci.
+- MZA: sčítací operáty 1857–1921 (jen v prohlížeči). Nástroj na stahování snímků z MZA nebude, archiv to zakázal.
+- Claude in Chrome: výstup JavaScriptu s adresou rozšíření zablokuje – jak to obejít.
+- Svazky „dosud uložené na matričním úřadě“, knihy řazené po vsích (neúplný popis, samostatné knihy vsí, pasti
+  rejstříků) a posun mezi číslem v rejstříku a snímkem.
+- Mapy stabilního katastru: jak se dostat k indikační skice a jak ji číst.
+- Výpadky archivů: co dělat, když archiv večer nebo v noci neodpovídá.
+
+Děkuji všem, kdo poslali zkušenosti e-mailem.
+
+## 0.8.0 – 4. 11. 2026
+
+Bezpečná aktualizace projektu (vlastní úpravy zůstanou), rychlé stahování z ARONu a přesnější kontrola dat.
+
+**Nové**
+- Aktualizace projektu už nepřepisuje vlastní úpravy webu a nástrojů. Projekt si pamatuje šablonu, ze které vznikl,
+  a při aktualizaci každý soubor buď přepíše (neupravený), nechá (šablona se nezměnila), nebo sloučí obě změny.
+  Kde to nejde, nechá soubor beze změny a Claude s vámi projde, co je nového a co je vaše úprava. Projekt ze starší
+  verze se při první aktualizaci přepíše jako dřív, ale původní soubory (nově i `tools/`) zůstanou v záloze
+  v `pracovni/` (#79, PR #88).
+- ARON: snímek se stahuje celý jedním požadavkem (jako tlačítko „stáhnout“) místo desítek dlaždic. Stránka, která
+  trvala minuty, je tu za sekundu, v plném rozlišení přesně původní sken. Zmenšení a výřez se dělají z disku a další
+  výřezy téže stránky už archiv nezatěžují.
+- `kontrola.py` hlásí sňatek, který nejmenuje partnera z rodokmenu (druhý sňatek vdovce u první ženy), a číslo domu,
+  které žádný citovaný zápis nedokládá (#80, PR #86). U předků bez obce na mapě ukáže slova, která vypadají jako obec
+  (#81).
+
+**Opravy**
+- `mista.py` hledá jen sídla – už nenajde bar nebo kadeřnictví stejného jména – a varuje, když je nové místo přes
+  50 km od ostatních (stejnojmenná obec jinde) (#81, PR #85).
+- Mezipaměť obrázků ukládá jen celé obrázky: přerušené stažení se neuloží a zkrácený snímek se stáhne znovu.
+- Aktualizace projektu neslučuje `package-lock.json`, vezme nový.
+
+**Návody**
+- SOA Třeboň: nástroj `trebon.py` je na žádost archivu odstraněn (licence DigiArchivu nepovoluje stahování
+  snímků skripty, #91). Matriky se čtou v prohlížeči jako dosud.
+
+Aktualizaci projektu napsal pavelzbornik (PR #88), stejně jako opravu `mista.py` (PR #85) a nové kontroly
+(PR #86). Děkuji i všem, kdo poslali zkušenosti e-mailem.
 
 ## 0.7.0 – 3. 11. 2026
 
-Nové nástroje pro mimomatriční prameny, interaktivní rodokmen, sčítání lidu a kontrolní pojistky.
+Sdílená mezipaměť obrázků: každý snímek se z archivu stáhne jen jednou. A kontrola, která nenechá prázdné rody a mapu.
 
 **Nové**
-- **Mimomatriční prameny:** fulltextové hledání v digitálních knihovnách Kramerius, databázi padlých v 1. sv. válce VÚA, Centrální evidenci válečných hrobů CEVH a noční fronta dotazů (`tools/prameny.py`).
-- **Arolsen Archives & Matricula:** vyhledávání nuceně nasazených a obětí války (`tools/arolsen.py`) a podpora pro portál Matricula (`tools/matricula.py`).
-- **Sčítání lidu:** modul pro plánování a vytěžování sčítacích operátů 1857–1921 (`tools/scitani.py`) a doplňkový skill `skills/scitani/`.
-- **Pozemkové knihy:** vyhledávání osob z rodokmenu v obci (`tools/pozemky.py predci`) a rychlé náhledy rejstříků (`pozemky.py rejstrik`).
-- **Pojistky kvality:** kontrola chronologie a podezřelých dat (`tools/kontrola_dat.py`), ověřování výsledků pomocníků proti halucinacím (`tools/kontrola_vysledku.py`).
-- **Geokódování domů:** vyhledání souřadnic konkrétního čp. pro mapu (`tools/dum.py`).
-- **Sdílená cache snímků (`tools/cache.py`):** převzato z PR #60 (Adam Fišer) – stejný snímek se z archivu stahuje jen jednou do `~/.cache/rodokmen_snimky/`, opakovaná čtení jdou z disku. Integrováno do všech archivních nástrojů včetně MZA a SOA Třeboň.
-- **Podpora pro novou ochranu MZA (ALTCHA):** `tools/mza.py` automaticky řeší novou Proof-of-Work ochranu (ALTCHA) a dynamické časové tokeny MZA Acta Publica. Ověřeno v ostrém provozu.
-- **Odblokování archivů (SOA Třeboň, eBadatelna SOA Praha, Porta fontium):** nahrazení blokovaného User-Agentu standardním prohlížečovým a oprava parsování názvů obcí v `trebon.py`.
-- **Rychlé hledání výřezu:** lokalizace polohy výřezu ve velkém snímku pomocí FFT za 0,5 s (`tools/najdi_vyrez.py`).
-- **Export GEDCOM:** generování standardního GEDCOM 5.5.1 souboru z dat projektu (`tools/gedcom.py`).
-- **Web:** nová stránka interaktivního rodokmenu s přepínáním přímé linie a celé rodiny (`rodokmen.astro`), zoomování kolečkem, podpora pro až 14 prstenců vějíře.
-- **Multi-agentní podpora:** šablony `AGENTS.md` a `GEMINI.md` pro Gemini a Antigravity se striktními pravidly proti vymýšlení pomocníků.
+- Mezipaměť obrázků pro všechny projekty na počítači (`~/.cache/rodokmen_snimky`, nejvýš 5 GB, staré se mažou
+  samy). Snímek nebo dlaždici, kterou už nějaký nástroj stáhl, vezme příště z disku bez dotazu na archiv. Porta
+  fontium dělá výřezy a náhledy z uloženého snímku. Kolik se ušetřilo, ukáže `cache.py stav` (#71, PR #60).
+- eBadatelna (SOA Praha): snímek načtený v prohlížeči se uloží do mezipaměti a dál se čte z disku. Při návratu
+  ke snímku (rejstřík, opakované čtení) už archiv nedostane žádný dotaz. `cache.py uloz … --nahled x.jpg` uloží
+  snímek a rovnou udělá náhled 1600 px.
+- `kontrola.py` hlásí známé pradědečky a prababičky (8–15) bez rodu v `LINES` a doložené předky, jejichž obec
+  chybí na mapě. Upozornění, že je čas napsat příběh rodu, přijde i bez vyplněných rodů.
+
+**Opravy**
+- Hlídač sítě už nezamítá heredoc, který jen obsahuje text „import http.client“ v řetězci.
+- `aron_img.py` si vytvoří výstupní složku sám.
+
+**Návody**
+- MZA: listovat v otevřené stránce (návrat je z mezipaměti prohlížeče), stránku neobnovovat. SOA Třeboň stahuje
+  při každém zobrazení snímku všechno znovu – přečíst všechny potřebné zápisy najednou.
+- Fáze 2: rod do `LINES` hned, jak je znám pradědeček nebo prababička, a každou novou obec do mapy.
+- `matriky.md`: náboženství dětí ze smíšených manželství, jiné křestní jméno než v dospělosti, jméno opravené
+  v zápisu, ale původní v rejstříku.
+
+Mezipaměť navrhl MarekLu (#71) a první verzi napsal AdamFiser (PR #60). Děkuji i všem, kdo poslali zkušenosti
+e-mailem.
+
+## 0.6.4 – 3. 11. 2026
+
+SOA Praha jen přes prohlížeč, orientace v knihách řazených po vsích, opravy nástrojů.
+
+**Nové**
+- SOA Praha (eBadatelna) od 2. 11. nástroj rodokmen zakazuje (robots.txt, HTTP 403). Skill proto čte středočeské
+  matriky a archiválie jen v prohlížeči eBadatelny: výřez zápisu vykreslí ze snímku, který prohlížeč už načetl,
+  a uloží snímek obrazovky. `ebadatelna.py` je zatím vypnutý (kromě odkazů) a brzda skripty na soapraha.cz
+  zastaví (#72).
+- Nástroj `mapa_knihy.py` pro knihy řazené po vsích: horní pruhy každého N-tého snímku pod sebou (stavba knihy
+  na jednom obrázku) nebo sloupec se jmény z několika snímků vedle sebe. ARON, Porta fontium, AHMP, nebo
+  z uložených snímků obrazovky (#12).
+- Brzda: `slusne.py zastav <web>` – když archiv odmítne prohlížeč, stopka platí i pro skripty a pomocníky.
+
+**Opravy**
+- Policejní přihlášky: když portál přiškrtí přístup, umí vrátit kartu úplně jiné osoby. Nástroj teď ověří,
+  že karta patří k hledání, jinak skončí chybou a nic neuloží. Brzda pro digi.nacr.cz 1 dotaz za 4 s.
+- Vějíř: předek, který je v rodokmenu dvakrát, má na obou místech celou větev předků (#31). Velký plakát
+  na pomalejším počítači už nehlásí falešnou chybu.
+- Import GEDCOM z MyHeritage: český znak rozdělený na konci řádku se už nerozbije.
+- `aron_img.py`: méně souběžných stahování (na macOS padal překlad adres), srozumitelné hlášky u svazku bez
+  snímků, neexistujícího svazku a výpadku certifikátu ARONu; bez argumentů vypíše nápovědu (stejně
+  `kramerius.py`).
+- `kontrola.py`: žádné falešné poplachy u „nejsou dluhy“ a u data dovětku.
+- `overit.py` si vytvoří výstupní složku sám.
+
+**Návody**
+- Čtení v prohlížeči: tempo 5–10 s mezi stránkami, jeden prohlížeč na archiv, při 403/429/503 hned skončit;
+  když nejde ani prohlížeč, pošle snímky obrazovky uživatel.
+- `matriky.md`: knihy řazené po vsích – nejdřív popis knihy a rejstřík, mapa knihy, montáž sloupců, pasti.
+- MZA: doména actapublica.eu archivu nepatří.
+
+Blokaci eBadatelny nahlásil george190321 (#72), chybu vějíře michalspondr (#31). Děkuji i všem, kdo poslali
+zkušenosti e-mailem.
 
 ## 0.6.3 – 3. 11. 2026
 

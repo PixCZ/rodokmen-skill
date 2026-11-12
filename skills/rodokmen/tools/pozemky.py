@@ -30,6 +30,7 @@ Použití (z kořene projektu):
       Vyhledá svazky lánových rejstříků (fond D 1) pokrývající danou obec.
 """
 
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); import slusne  # noqa: E402 – brzda proti zablokování archivem (společný limit dotazů, tools/slusne.py)
 import argparse
 import json
 import os

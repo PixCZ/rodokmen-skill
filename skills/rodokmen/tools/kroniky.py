@@ -18,6 +18,7 @@ Použití (z kořene projektu):
   python3 -I tools/kroniky.py snimek "009b1fbc-05e9-4498-833a-4f8507be94c9" 1 out.jpg [--nahled] [--crop x0,y0,x1,y1]
 """
 
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); import slusne  # noqa: E402 – brzda proti zablokování archivem (společný limit dotazů, tools/slusne.py)
 import argparse
 import json
 import os

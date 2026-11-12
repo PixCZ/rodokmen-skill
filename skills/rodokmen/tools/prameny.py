@@ -29,6 +29,7 @@ Noční běh (`fronta spustit`):
   - rovnoměrná pauza mezi dotazy (výchozí 5–10 s) a strop na počet dotazů za běh; deník pracovni/prameny/log.txt.
   Ráno: `fronta vysledky`, projít nálezy, zapsat stopy (deník, note) a `fronta vycisti`.
 """
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); import slusne  # noqa: E402 – brzda proti zablokování archivem (společný limit dotazů, tools/slusne.py)
 import argparse
 import json
 import os

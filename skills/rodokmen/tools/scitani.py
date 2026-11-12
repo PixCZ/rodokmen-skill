@@ -26,6 +26,7 @@ osoby; rozpor (jiné datum, jméno) → ISSUES a znovu se podívat do matriky; n
 Zápis: druh "S", klíč `s_<rok>_<obec>_cp<čp>`, misto „Obec čp. N“, svazek z `svazek`, odkaz `…/detail/<id>?image=<název>`.
 Nástroj nic nezapisuje do data/; mezipaměť a plán jsou v pracovni/scitani/.
 """
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); import slusne  # noqa: E402 – brzda proti zablokování archivem (společný limit dotazů, tools/slusne.py)
 import http.cookiejar
 import json
 import os
@@ -46,7 +47,7 @@ import mza  # noqa: E402
 
 PORTAL = "https://www.mza.cz/scitacioperaty"
 CACHE = os.path.join(ROOT, "pracovni", "scitani")
-UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+UA = "Mozilla/5.0 (rodokmen)"
 # rozhodný den sčítání (1857: 31. 10.; 1921: 15. 2.; jinak 31. 12.)
 ROKY = [1857, 1869, 1880, 1890, 1900, 1910, 1921]
 

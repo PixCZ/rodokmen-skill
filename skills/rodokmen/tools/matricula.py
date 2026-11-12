@@ -13,6 +13,7 @@ Použití (z kořene projektu):
                                          číslo řádku = číslo snímku v prohlížeči; trvalý odkaz je …/<kniha>/?pg=<číslo>
 Ber ohled na server: stahuj jen to, co čteš.
 """
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); import slusne  # noqa: E402 – brzda proti zablokování archivem (společný limit dotazů, tools/slusne.py)
 import html, json, re, sys, time, urllib.parse, urllib.request
 for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
     if hasattr(_s, "reconfigure"):
@@ -29,7 +30,7 @@ def get(cesta):
     err = None
     for attempt in range(3):
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"})
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (rodokmen)"})
             with urllib.request.urlopen(req, timeout=60) as r:
                 return r.read().decode("utf-8", "replace")
         except OSError as e:

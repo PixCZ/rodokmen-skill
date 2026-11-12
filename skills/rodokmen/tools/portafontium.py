@@ -5,7 +5,8 @@ Použití (z kořene projektu `python3 -I tools/portafontium.py …`, na Windows
   portafontium.py fara <fara>                -> knihy fary: kniha | obce | roky a druhy (* N, oo O, + Z, i index) | popis
                                                 <fara> = část adresy římskokatolické fary, např. „dolni-bela“
                                                 (https://www.portafontium.eu/contents/register/soap-pn/cirkev-rimskokatolicka/dolni-bela);
-                                                obec → fara nástroj nehledá – faru zjisti na portálu (vyhledávání matrik, pole Místo)
+  portafontium.py obec <obec>                -> knihy s obcí v popisu, seskupené podle fary (i historické názvy obce;
+                                                stejnojmenné obce jiných far vyřaď podle sloupce obcí)
   portafontium.py info <kniha>               -> popis knihy (signatura, druh, text desky…) a počet snímků
                                                 <kniha> = část adresy knihy, např. „dolni-bela-17“
   portafontium.py snimek <kniha> <snímek> <vystup.jpg> [nahled] [x0,y0,x1,y1]
@@ -13,12 +14,14 @@ Použití (z kořene projektu `python3 -I tools/portafontium.py …`, na Windows
                                                 x0,y0,x1,y1 = jen výřez (zlomky 0..1)
   portafontium.py link <kniha> <snímek>      -> trvalý odkaz na snímek (pole „odkaz“ v zaznamy.json)
   portafontium.py svazek <kniha>             -> zapíše svazek do data/svazky.json (klíč pf_<kniha>)
-Snímek = pořadové číslo náhledu v prohlížeči portálu (1, 2, 3…). Stránky knih i celé snímky se ukládají do sdílené cache (tools/cache.py).
+Snímek = pořadové číslo náhledu v prohlížeči portálu (1, 2, 3…). Stránky knih se ukládají do pracovni/.cache_pf/.
 Ber ohled na server: stahuj jen snímky, které čteš.
 """
 import html, http.client, json, os, re, ssl, sys, time, unicodedata, urllib.error, urllib.parse, urllib.request
+if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help"):   # nápověda místo pádu
+    sys.exit(__doc__.strip())
 import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); import slusne  # noqa: E402 – brzda proti zablokování archivem (společný limit dotazů, tools/slusne.py)
-import cache  # noqa: E402 – sdílená cache stažených snímků (tools/cache.py)
+import cache  # noqa: E402 – sdílená mezipaměť obrázků (tools/cache.py): výřez a náhled z uloženého snímku
 for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8", errors="replace")
@@ -26,8 +29,8 @@ for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (
 BASE = "https://www.portafontium.eu"
 ARCHIV = "soap-pn"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CACHE = cache.cesta("portafontium")   # stránky knih (seznam snímků) i celé snímky
-UA = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
+CACHE = os.path.join(ROOT, "pracovni", ".cache_pf")
+UA = {"User-Agent": "Mozilla/5.0 (rodokmen)"}   # bez prohlížečového User-Agentu portál vrací 403
 PAUZA = 0.5   # s před každým požadavkem – ohled na server i při volání ve smyčce
 
 # Server portálu posílá jen svůj certifikát bez mezilehlého (prohlížeče a curl si ho dohledají, Python ne →
@@ -153,26 +156,24 @@ def scan(kniha, n):
 
 def snimek(kniha, n, out, nahled=False, crop=None):
     kniha, _, path, link = scan(kniha, n)
-    region = "full"
     if crop:
         x0, y0, x1, y1 = crop
         if not (0 <= x0 < x1 <= 1 and 0 <= y0 < y1 <= 1):
             sys.exit("výřez x0,y0,x1,y1 musí být zlomky 0–1 a x0 < x1, y0 < y1")
-        region = "pct:" + ",".join(f"{v * 100:.3f}" for v in (x0, y0, x1 - x0, y1 - y0))
-    size = "pct:25" if nahled else "full"
-
-    def stahni(cil):
-        data = get(f"/fcgi-bin/iipsrv.fcgi?IIIF={urllib.parse.quote(path)}/{region}/{size}/0/default.jpg", binary=True)
+    iiif = f"/fcgi-bin/iipsrv.fcgi?IIIF={urllib.parse.quote(path)}"
+    # celý snímek je po prvním stažení ve sdílené mezipaměti (brzda slusne.py, tools/cache.py) – výřez a náhled z něj
+    ulozeny = cache.najdi_url(BASE + iiif + "/full/full/0/default.jpg") if (crop or nahled) else None
+    if ulozeny and cache.odvod(ulozeny, out, crop, 4 if nahled else 1):
+        print("z mezipaměti, bez stahování:", ulozeny)
+    else:
+        region = "full" if not crop else "pct:" + ",".join(
+            f"{v * 100:.3f}" for v in (crop[0], crop[1], crop[2] - crop[0], crop[3] - crop[1]))
+        data = get(f"{iiif}/{region}/{'pct:25' if nahled else 'full'}/0/default.jpg", binary=True)
         if not data.startswith(b"\xff\xd8"):
             sys.exit("Porta fontium nevrátil obrázek JPEG (zkus to později)")
-        os.makedirs(os.path.dirname(os.path.abspath(cil)), exist_ok=True)
-        with open(cil, "wb") as f:
+        os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
+        with open(out, "wb") as f:
             f.write(data)
-
-    if crop:
-        stahni(out)
-    else:
-        cache.soubor(f"portafontium/{kniha}/sn{int(n):04d}{'-nahled' if nahled else ''}.jpg", out, stahni)
     print(out, f"{os.path.getsize(out) // 1024} kB", "odkaz:", BASE + link)
 
 
@@ -195,6 +196,43 @@ def fara(slug):
             return out
 
 
+def obec(nazev):
+    """Knihy, v jejichž popisu je obec (i historické a podobné názvy) – vyhledávání matrik portálu podle místa."""
+    url = "/searching/register?search_api_views_fulltext_1=" + urllib.parse.quote(nazev.strip())
+    out, n = [], 0
+    while True:   # výsledky po 40 na stránku
+        page = get(url + (f"&page={n}" if n else ""))
+        for row in re.findall(r"<tr[^>]*>(.*?)</tr>", page, re.S):
+            m = re.search(r'href="/register/[^/]+/([^"]+)"', row)
+            if not m:
+                continue
+            cells = [text(c) for c in re.findall(r"<td[^>]*>(.*?)</td>", row, re.S)]
+            out.append((m.group(1), [c for c in cells if c and c != ">"]))
+        n += 1
+        if not re.search(rf"[?&](?:amp;)?page={n}\b", page) or n > 50:
+            return out
+
+
+def _rok(s):
+    m = re.search(r"\d{4}", s)
+    return int(m.group()) if m else 9999
+
+
+def vypis_obec(knihy):
+    """Knihy seskupené podle fary (nebo úřadu), fary i knihy podle začátku let – přechod obce mezi farami je vidět."""
+    skupiny = {}
+    for k, c in knihy:   # c = archiv | název knihy | obce | roky a druhy | popis
+        nazev = re.sub(r"\s+\S*\d+\w*$", "", c[1]) if len(c) > 1 else k
+        skupiny.setdefault((nazev, re.sub(r"-\d+\w*$", "", k)), []).append((k, c[2:]))
+    for (nazev, slug), kn in sorted(skupiny.items(), key=lambda g: min(_rok(" ".join(c)) for _, c in g[1])):
+        print(f"{nazev} (fara {slug})")
+        for k, c in sorted(kn, key=lambda x: _rok(x[1][1] if len(x[1]) > 1 else "")):
+            print(" ", k, "|", " | ".join(zkrat(x, 160) for x in c))
+        print()
+    print("Pozor: portál hledá i historické a podobné názvy – podle sloupce obcí vyřaď stejnojmenné obce jiných far.\n"
+          "Obec mohla v různých letech patřit k různým farám (viz roky); knihy okresních úřadů jsou civilní matriky.")
+
+
 def zkrat(s, n=300):
     return s if len(s) <= n else s[:n].rsplit(" ", 1)[0] + " …"
 
@@ -202,7 +240,7 @@ def zkrat(s, n=300):
 def svazek(kniha):
     kniha, fields, scans, _ = info(kniha)
     path = os.path.join(ROOT, "data", "svazky.json")
-    d = json.load(open(path, encoding="utf-8")) if os.path.exists(path) else {}
+    d = json.load(open(path, encoding="utf-8-sig")) if os.path.exists(path) else {}
     sig = fields.get("Signatura", kniha)
     popis = "; ".join(x for x in (fields.get("Místo", ""), fields.get("Text desky", "")) if x)
     d[f"pf_{kniha}"] = {"archiv": "SOA Plzeň – Sbírka matrik západních Čech", "portal": "Porta fontium",
@@ -220,9 +258,17 @@ if __name__ == "__main__":
     if a[0] == "fara" and len(a) > 1:
         knihy = fara(a[1])
         if not knihy:
-            sys.exit(f"Fara „{a[1]}“ nenalezena nebo nemá knihy – zkontroluj část adresy (např. dolni-bela).")
+            sys.exit(f"Fara „{a[1]}“ nenalezena nebo nemá knihy – zkontroluj část adresy (např. dolni-bela). "
+                     f"Stejnojmenné fary mají příponu okresu (plana-ps, radnice-ro): správnou adresu ukáže "
+                     f"portafontium.py obec \"{a[1]}\".")
         for k, c in knihy:
             print(k, "|", " | ".join(zkrat(x) for x in c[1:]))
+    elif a[0] == "obec" and len(a) > 1:
+        knihy = obec(" ".join(a[1:]))
+        if not knihy:
+            sys.exit(f"Obec „{' '.join(a[1:])}“ v popisu knih nenalezena – zkus jiný tvar názvu (Stajanovice × "
+                     "Stojanovice, německý název) nebo sousední obec.")
+        vypis_obec(knihy)
     elif a[0] == "info" and len(a) > 1:
         k, f, s, _ = info(a[1])
         for lab, val in f.items():

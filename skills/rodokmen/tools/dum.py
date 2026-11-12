@@ -15,6 +15,7 @@ Použití (z kořene projektu):
 Položka v mista.json: {"Holice čp. 112": {"re": "Holice čp\\. 112(?!\\d)", "dum": true, "lat": …, "lon": …}}
 – web ji ukáže jako samostatný bod s osobami, jejichž fakta obsahují „Holice čp. 112“.
 """
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); import slusne  # noqa: E402 – brzda proti zablokování archivem (společný limit dotazů, tools/slusne.py)
 import json
 import os
 import re

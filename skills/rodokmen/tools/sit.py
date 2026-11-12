@@ -6,10 +6,12 @@ Vlastnosti:
   - Používá standardní knihovnu Pythonu (funguje i v `python3 -I` bez externích závislostí).
   - Recyklace spojení (Connection pooling / Keep-Alive) a opětovné využití TLS handshake.
   - Šetrné pauzy mezi požadavky (rate limiting s nastavitelným jitterem).
-  - Automatické opakování požadavků (retry s exponenciálním backoffem) při výpadcích (502, 503, 504, timeout).
+  - Opakování jen při výpadku brány (502, 504) a přerušeném spojení; 429/503/403 a blokaci řeší brzda tools/slusne.py
+    (web zastaví, nástroj skončí kódem 3) – nic se neobchází.
   - Podpora automatické dekomprese gzip a deflate.
 """
 
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); import slusne  # noqa: E402 – brzda proti zablokování archivem (společný limit dotazů, tools/slusne.py)
 import gzip
 import http.client
 import json
@@ -24,7 +26,7 @@ import zlib
 from typing import Any, Dict, Optional, Tuple, Union
 
 # Výchozí hlavička User-Agent
-DEFAULT_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
+DEFAULT_UA = "Mozilla/5.0 (rodokmen)"
 
 
 class HttpResponse:
@@ -232,8 +234,8 @@ class Sit:
 
                 http_resp = HttpResponse(resp.status, resp_headers, raw_body, url)
 
-                # Retry při dočasných chybách serveru (502, 503, 504, 429)
-                if http_resp.status in (429, 502, 503, 504) and pokus < self.max_retries:
+                # Retry jen při výpadku brány; 429/503 zastaví brzda (slusne.py) dřív, než se sem dostane
+                if http_resp.status in (502, 504) and pokus < self.max_retries:
                     wait_time = self.backoff_factor ** pokus + random.uniform(0.5, 1.5)
                     time.sleep(wait_time)
                     self._uzavri_spojeni(scheme, host, port)

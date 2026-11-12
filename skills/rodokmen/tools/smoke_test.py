@@ -21,14 +21,11 @@ PY = [sys.executable, "-I", "-X", "utf8"]
 # (název, [nástroj, argumenty…], očekávaný text ve výstupu, „volitelné“ = NEDOSTUPNÉ i při jiné chybě sítě je v pořádku)
 TESTY = [
     ("aron", ["aron_search.py", "Holice"], "|", False),
-    ("trebon", ["trebon.py", "misto", "Tábor"], "Tábor", False),
     ("portafontium", ["portafontium.py", "fara", "Dolní Bělá"], "|", False),
-    ("ebadatelna", ["ebadatelna.py", "hledat", "Kladno"], "Kladno", False),
     ("ahmp", ["@bash", "ahmp_search.sh", "Smíchov"], "Smíchov", False),
     ("prihlasky", ["policie_prihlasky.py", "Novak", "Jan"], "záznamů", False),
     ("kramerius", ["kramerius.py", 'text_ocr:"Jan Novák" AND datum_begin:[1900 TO 1905]', "3"], "found", False),
     ("anno", ["anno.py", '"Johann Nowak"', "1880", "1890", "1"], "", True),
-    ("mza", ["mza.py", "svazky", "Hustopeče", "N"], "Hustop", False),
     ("scitani", ["scitani.py", "sady", "Hustopeče", "1900"], "1900", False),
     ("prameny-kramerius", ["prameny.py", "hledat", "kramerius", "Jan Novák", "--od", "1900", "--do", "1905", "--radky", "3"], "Novák", False),
     ("prameny-vua", ["prameny.py", "hledat", "vua", "Novák", "--jmeno", "Josef"], "Novák", False),
